@@ -1,0 +1,23 @@
+#BlueJ class context
+comment0.params=
+comment0.target=ArrayQueue()
+comment0.text=\n\ Constructor\ for\ objects\ of\ class\ ArrayQueue\ that\ initializes\ \n
+comment1.params=element
+comment1.target=void\ enqueue(java.lang.Object)
+comment1.text=\ \ \n\ Adds\ one\ element\ to\ the\ rear\ of\ this\ queue.\ \n\ @param\ element\ \ the\ element\ to\ be\ added\ to\ the\ rear\ of\ the\ queue\ \ \n
+comment2.params=
+comment2.target=java.lang.Object\ dequeue()
+comment2.text=\ \ \n\ Removes\ and\ returns\ the\ element\ at\ the\ front\ of\ this\ queue.\n\ @return\ the\ element\ at\ the\ front\ of\ the\ queue\n
+comment3.params=
+comment3.target=java.lang.Object\ first()
+comment3.text=\ \ \n\ Returns\ without\ removing\ the\ element\ at\ the\ front\ of\ this\ queue.\n\ @return\ the\ first\ element\ in\ the\ queue\n
+comment4.params=
+comment4.target=boolean\ isEmpty()
+comment4.text=\ \ \n\ Returns\ true\ if\ this\ queue\ contains\ no\ elements.\n\ @return\ true\ if\ this\ queue\ is\ empty\n
+comment5.params=
+comment5.target=int\ size()
+comment5.text=\ \ \n\ Returns\ the\ number\ of\ elements\ in\ this\ queue.\ \n\ @return\ the\ integer\ representation\ of\ the\ size\ of\ the\ queue\n
+comment6.params=
+comment6.target=java.lang.String\ toString()
+comment6.text=\ \ \n\ Returns\ a\ string\ representation\ of\ this\ queue.\ \n\ @return\ the\ string\ representation\ of\ the\ queue\n
+numComments=7
