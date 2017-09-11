@@ -1,0 +1,24 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Owin.Hosting;
+
+namespace LoggingWebHost
+{
+    public class WebServer
+    {
+        private IDisposable _webapp;
+
+        public void Start()
+        {
+            _webapp = WebApp.Start<Startup>("http://nc-corp-3125:11222");
+        }
+
+        public void Stop()
+        {
+            _webapp.Dispose();
+        }
+    }
+}

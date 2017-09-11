@@ -1,0 +1,167 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using LoggingService.Models;
+using LoggingService.Services;
+
+namespace LoggingService.Services
+{
+    public interface IBusinessService
+    {
+        IEnumerable<ClientData> View();
+        IEnumerable<ClientData> View(ClientData clientData);
+        DataActionResult Insert(ClientData clientData);
+        DataActionResult Update(ClientData clientData);
+        DataActionResult Delete(DeleteClientData deleteClientData);
+    }
+    public class BusinessLogic : IBusinessService
+    {
+        private SqlDataService dataSer;
+        private ISqlDataService dataService;
+        
+        public BusinessLogic()
+        {
+            dataSer = new SqlDataService();
+            dataService = null;
+        }
+        
+        public BusinessLogic(ISqlDataService dataService)
+        {
+            this.dataService = dataService;
+            dataSer = null;
+        }
+        
+        public IEnumerable<ClientData> View()
+        {
+            IEnumerable<ClientData> viewBus = null;
+            if (dataSer == null)
+            {
+                IEnumerable<ClientData> viewBusInterface = dataService.View();
+                viewBus = viewBusInterface;
+            }
+            else if (dataService == null)
+            {
+                IEnumerable<ClientData> viewBusData = dataSer.View();
+                viewBus = viewBusData;
+            }
+            return viewBus;
+        }
+        
+        public IEnumerable<ClientData> View(ClientData ClientData)
+        {
+            IEnumerable<ClientData> viewBus = null;
+            if (ClientData.Id < 1)
+            {
+                throw new InvalidOperationException("ID value must be positive");
+            }
+            if (dataSer == null)
+            {
+                IEnumerable<ClientData> viewBusInterface = dataService.DataSpecificId(ClientData);
+                viewBus = viewBusInterface;
+            }
+            else if (dataService == null)
+            {
+                IEnumerable<ClientData> viewBusData = dataSer.DataSpecificId(ClientData);
+                viewBus = viewBusData;
+            }
+            return viewBus;
+        }
+        
+        public DataActionResult Insert(ClientData clientData)
+        {
+            var insertBus = new DataActionResult();
+            if (dataSer == null)
+            {
+                var insertBusInterface = dataService.Insert(clientData);
+                insertBus = insertBusInterface;
+            }
+            else if (dataService == null)
+            {
+                var insertBusData = dataSer.Insert(clientData);
+                insertBus = insertBusData;
+            }
+            return insertBus;
+        }
+        
+        public DataActionResult Update(ClientData clientData)
+        {
+            var insertBus = new DataActionResult();
+            if (dataSer == null)
+            {
+                var updateBusInterface = dataService.Update(clientData);
+                insertBus = updateBusInterface;
+            }
+            else if (dataService == null)
+            {
+                var updateBusData = dataSer.Update(clientData);
+                insertBus = updateBusData;
+            }
+            return insertBus;
+        }
+        
+        public DataActionResult Delete(DeleteClientData deleteClientData)
+        {
+            var deleteBus = new DataActionResult();
+            if (dataSer == null)
+            {
+                var deleteBusInterface = dataService.Delete(deleteClientData);
+                deleteBus = deleteBusInterface;
+            }
+            else if (dataService == null)
+            {
+                var deleteBusData = dataSer.Delete(deleteClientData);
+                deleteBus = deleteBusData;
+            }
+            return deleteBus;
+        }
+        
+        public IEnumerable<ClientData> SearchId(int id)
+        {
+            ClientData clientData = new ClientData(id);
+            IEnumerable<ClientData> viewId = dataSer.DataSpecificId(clientData);
+            return viewId;
+        }
+        public IEnumerable<ClientData> Search(ClientData clientData)
+        {
+            IEnumerable<ClientData> searchResults = null;
+            //search by id
+            if (clientData.Details == null && clientData.MessageOutput == null && clientData.SourceData == null)
+            {
+                //searchResults = dataSer.DataSpecificId(clientData);
+            }
+            //search by date
+            else if (clientData.Id == 0 && clientData.Details == null && clientData.MessageOutput == null && clientData.SourceData == null)
+            {
+                searchResults = dataSer.DataSpecificDate(clientData);
+            }
+            //search by source
+            else if (clientData.Id == 0 && clientData.Details == null && clientData.MessageOutput == null)
+            {
+                searchResults = dataSer.DataSpecificSource(clientData);
+            }
+            //search by message
+            else if (clientData.Id == 0 && clientData.SourceData == null && clientData.Details == null)
+            {
+                searchResults = dataSer.DataSpecificMessage(clientData);
+            }
+            //search by detail
+            else if (clientData.Id == 0 && clientData.SourceData == null && clientData.MessageOutput == null)
+            {
+                searchResults = dataSer.DataSpecificDetail(clientData);
+            }
+            return searchResults;
+        }
+        public IEnumerable<ClientData> Item()
+        {
+            ClientData client = new ClientData(5, "s", "s", "m");
+            var item = new List<ClientData>();
+            item.Add(new ClientData(client.Id, client.SourceData, client.MessageOutput, client.Details, client.CreatedDateEst));
+
+            return item;
+        }
+    }
+    
+}
+

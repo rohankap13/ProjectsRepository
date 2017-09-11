@@ -1,0 +1,94 @@
+using ClientInterface.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ClientInterface.Services;
+namespace ClientInterface.Services
+
+{
+    public class SearchService
+    {
+		public SearchService(string webApiBaseAddress)
+	    {
+		    httpSer = new HttpService(webApiBaseAddress);
+	    }
+
+        private HttpService httpSer;
+        
+        public List<ClientData> Search (ClientData client)
+        {
+            List<ClientData> searchResults = new List<ClientData>();
+            var clientData = httpSer.GetSearch(client);
+            for (int i = 0; i < clientData.Count(); i++)
+            {
+                searchResults.Add(clientData.ElementAt(i));
+            }
+            return searchResults;
+        }
+        public List<ClientData> SearchBySrc(ClientData client)
+        {
+            List<ClientData> searchResults = new List<ClientData>();
+            var clientData = httpSer.GetSearchSrc(client);
+            for (int i = 0; i < clientData.Count(); i++)
+            {
+                searchResults.Add(clientData.ElementAt(i));
+            }
+            return searchResults;
+        }
+
+        /*public List<ClientData> SearchByDate (string date)
+        {
+            List<ClientData> searchDate = new List<ClientData>();
+            var clientData = httpSer.GetSearchDate(date);
+            for (int i = 0; i < clientData.Count(); i++)
+            {
+                if (clientData.ElementAt(i).CreatedDateEst.ToString().Contains(date))
+                {
+                    searchDate.Add(clientData.ElementAt(i));
+                }
+            }
+            return searchDate;
+        }
+        public List<ClientData> SearchBySource(string src)
+        {
+            List<ClientData> searchSource = new List<ClientData>();
+            var clientData = httpSer.GetSearchSource(src);
+            for (int i = 0; i < clientData.Count(); i++)
+            {
+                if (clientData.ElementAt(i).SourceData.ToLower().Contains(src.ToLower()))
+                {
+                    searchSource.Add(clientData.ElementAt(i));
+                }
+            }
+            return searchSource;
+        }
+        public List<ClientData> SearchByMessage(string msg)
+        {
+            List<ClientData> searchMessage = new List<ClientData>();
+            var clientData = httpSer.GetSearchMessage(msg);
+            for (int i = 0; i < clientData.Count(); i++)
+            {
+                if (clientData.ElementAt(i).MessageOutput.ToLower().Contains(msg.ToLower()))
+                {
+                    searchMessage.Add(clientData.ElementAt(i));
+                }
+            }
+            return searchMessage;
+        }
+        public List<ClientData> SearchByDetail(string det)
+        {
+            List<ClientData> searchDetail = new List<ClientData>();
+            var clientData = httpSer.GetSearchDetail(det);
+            for (int i = 0; i < clientData.Count(); i++)
+            {
+                if (clientData.ElementAt(i).Details.ToString().ToLower().Contains(det.ToLower()))
+                {
+                    searchDetail.Add(clientData.ElementAt(i));
+                }
+            }
+            return searchDetail;
+        }*/
+    }
+}

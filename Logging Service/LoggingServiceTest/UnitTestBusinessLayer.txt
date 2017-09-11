@@ -1,0 +1,369 @@
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Data.SqlClient;
+using LoggingService;
+using LoggingService.Models;
+using LoggingService.Services;
+using System.Collections.Generic;
+using System.Linq;
+namespace LoggingServiceTest
+{
+    [TestClass]
+    public class UnitTestBusinessLayer
+    {
+        
+        public string date = DateTime.Now.ToString();
+        
+        //View
+        [TestMethod]
+        public void WithValidData_View_ReturnsSuccess()
+        {
+            var expectedData = new List<ClientData>();
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData expectedClientDataRow1 = new ClientData(1, "src", "msg", "det", dt);
+            ClientData expectedClientDataRow2 = new ClientData(2, "src2", "msg2", "det2", dt);
+            expectedData.Add(new ClientData(expectedClientDataRow1.Id, expectedClientDataRow1.SourceData, expectedClientDataRow1.MessageOutput, expectedClientDataRow1.Details, expectedClientDataRow1.CreatedDateEst));
+            expectedData.Add(new ClientData(expectedClientDataRow2.Id, expectedClientDataRow2.SourceData, expectedClientDataRow2.MessageOutput, expectedClientDataRow2.Details, expectedClientDataRow2.CreatedDateEst));
+            IEnumerable<ClientData> expectedDataRows = expectedData;
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var actualResult = busLogic.View();
+            bool isEqual = false;
+            for (int i = 0; i < actualResult.Count(); i++)
+            {
+                if (expectedDataRows.ElementAt(i).Id == actualResult.ElementAt(i).Id
+                    && expectedDataRows.ElementAt(i).SourceData == actualResult.ElementAt(i).SourceData
+                    && expectedDataRows.ElementAt(i).MessageOutput == actualResult.ElementAt(i).MessageOutput
+                    && expectedDataRows.ElementAt(i).Details == actualResult.ElementAt(i).Details
+                    )
+                {
+                    isEqual = true;
+                }
+                else
+                {
+                    isEqual = false;
+                    break;
+                }
+            }
+            Assert.IsTrue(isEqual);
+        }
+        [TestMethod]
+        public void WithValidData_View_Returns2Entries()
+        {
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var result = busLogic.View();
+            Assert.IsTrue(result.Count() == 2);
+        }
+        [TestMethod]
+        public void WithValidData_DataSpecific_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData expectedClientData = new ClientData(2, "src2", "msg2", "det2", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            IEnumerable<ClientData> result = busLogic.View(expectedClientData);
+            var actualUserData = result.First();
+            Assert.IsTrue(
+                expectedClientData.Id == actualUserData.Id
+                && expectedClientData.SourceData == actualUserData.SourceData
+                && expectedClientData.MessageOutput == actualUserData.MessageOutput
+                && expectedClientData.Details == actualUserData.Details
+                );
+        }
+        //Insert
+        [TestMethod]
+        public void WithValidData_Insert_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(3, "src3", "msg3", "det3", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var result = busLogic.Insert(clientDataTest);
+            Assert.IsTrue(result.IsSuccess);
+        }
+        [TestMethod]
+        public void WithValidData_Insert_Id_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(4, "sourceTestId", "messageTestId", "detailsTestId", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var actualData = busLogic.View();
+            var result = busLogic.Insert(clientDataTest);
+            Assert.IsTrue(actualData.Last().Id == clientDataTest.Id);
+        }
+        [TestMethod]
+        public void WithValidData_Insert_Source_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(4, "sourceTestSource", "messageTestSource", "detailsTestSource", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var actualData = busLogic.View();
+            var result = busLogic.Insert(clientDataTest);
+            Assert.IsTrue(actualData.Last().SourceData == clientDataTest.SourceData);
+        }
+        [TestMethod]
+        public void WithValidData_Insert_Message_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(4, "sourceTestMessage", "messageTestMessage", "detailsTestMessage", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var actualData = busLogic.View();
+            var result = busLogic.Insert(clientDataTest);
+            Assert.IsTrue(actualData.Last().MessageOutput == clientDataTest.MessageOutput);
+        }
+        [TestMethod]
+        public void WithValidData_Insert_Detail_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(4, "sourceTestDetail", "messageTestDetail", "detailsTestDetail", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var actualData = busLogic.View();
+            var result = busLogic.Insert(clientDataTest);
+            Assert.IsTrue(actualData.Last().Details == clientDataTest.Details);
+        }
+        //Update
+        [TestMethod]
+        public void WithValidData_Update_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(3, "src3", "msg3", "det3", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var result = busLogic.Update(clientDataTest);
+            Assert.IsTrue(result.IsSuccess);
+        }
+        [TestMethod]
+        public void WithValidData_Update_Source_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData expectedClientData = new ClientData(3, "src3Source", "msg3Source", "det3Source", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            IEnumerable<ClientData> datarows = busLogic.View();
+            var result = busLogic.Update(expectedClientData);
+            var actualResult = busLogic.View(expectedClientData);
+            Assert.IsTrue(expectedClientData.SourceData == actualResult.First().SourceData);
+        }
+        [TestMethod]
+        public void WithValidData_Update_Message_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData expectedClientData = new ClientData(3, "src3Message", "msg3Message", "det3Message", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            IEnumerable<ClientData> datarows = busLogic.View();
+            var result = busLogic.Update(expectedClientData);
+            var actualResult = busLogic.View(expectedClientData);
+            Assert.IsTrue(expectedClientData.MessageOutput == actualResult.First().MessageOutput);
+        }
+        [TestMethod]
+        public void WithValidData_Update_Detail_View_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData expectedClientData = new ClientData(3, "src3Detail", "msg3Detail", "det3Detail", dt);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            IEnumerable<ClientData> datarows = busLogic.View();
+            var result = busLogic.Update(expectedClientData);
+            var actualResult = busLogic.View(expectedClientData);
+            Assert.IsTrue(expectedClientData.Details == actualResult.First().Details);
+        }
+        //Delete
+        [TestMethod]
+        public void WithValidData_Delete_ReturnsSuccess()
+        {
+            DeleteClientData clientDataTest = new DeleteClientData(2);
+            BusinessLogic busLogic = new BusinessLogic(new SqlDataServiceTestClient());
+            var result = busLogic.Delete(clientDataTest);
+            Assert.IsTrue(result.IsSuccess);
+        }
+        //ObjectValidity
+        [TestMethod]
+        public void WithValidClientData_IsValid_ReturnsSuccess()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTest = new ClientData(5, "srcTest", "msgTest", "detTest", dt);
+            var result = clientDataTest.IsValid;
+            Assert.IsTrue(result);
+        }
+        [TestMethod]
+        public void WithInValidClientData_InValidSource_WhiteSpace_ReturnsFailure()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            bool flag = false;
+            try
+            {
+                ClientData clientDataTest = new ClientData(5, "", "msgTest", "detTest", dt);
+                flag = clientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                {
+                    flag = false;
+                }
+            }
+            Assert.IsFalse(flag);
+        }
+        [TestMethod]
+        public void WithInValidClientData_InValidMessage_WhiteSpace_ReturnsFailure()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            bool flag = false;
+            try
+            {
+                ClientData clientDataTest = new ClientData(5, "srcTest", "", "detTest", dt);
+                flag = clientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                    flag = false;
+            }
+            Assert.IsFalse(flag);
+        }
+        [TestMethod]
+        public void WithInValiClientData_InValidDetail_WhiteSpace_ReturnsFailure()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            bool flag = false;
+            try
+            {
+                ClientData clientDataTest = new ClientData(5, "srcTest", "msgTest", "", dt);
+                flag = clientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                    flag = false;
+            }
+            Assert.IsFalse(flag);
+        }
+        [TestMethod]
+        public void WithInValidClientData_InValidSource_Null_ReturnsFailure()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            bool flag = false;
+            try
+            {
+                ClientData clientDataTest = new ClientData(5, null, "msgTest", "detTest", dt);
+                flag = clientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                {
+                    flag = false;
+                }
+            }
+            Assert.IsFalse(flag);
+        }
+        [TestMethod]
+        public void WithInValidClientData_InValidMessage_Null_ReturnsFailure()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            bool flag = false;
+            try
+            {
+                ClientData clientDataTest = new ClientData(5, "srcTest", null, "detTest", dt);
+                flag = clientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                    flag = false;
+            }
+            Assert.IsFalse(flag);
+        }
+        [TestMethod]
+        public void WithInValiClientData_InValidDetail_Null_ReturnsFailure()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            bool flag = false;
+            try
+            {
+                ClientData clientDataTest = new ClientData(5, "srcTest", "msgTest", null, dt);
+                flag = clientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                    flag = false;
+            }
+            Assert.IsFalse(flag);
+        }
+        [TestMethod]
+        public void WithValidDeleteClientData_ReturnsSuccess()
+        {
+            DeleteClientData deleteClientTest = new DeleteClientData(2);
+            var result = deleteClientTest.IsValid;
+            Assert.IsTrue(result);
+        }
+        [TestMethod]
+        public void WithInValidDeleteClientData_InValidId_Negative_ReturnsFailure()
+        {
+            bool flag = false;
+            try
+            {
+                DeleteClientData deleteClientDataTest = new DeleteClientData(-1);
+                flag = deleteClientDataTest.IsValid;
+            }
+            catch (Exception ex)
+            {
+                if (ex.ToString() == "Not all parameters are valid")
+                    flag = false;
+            }
+            Assert.IsFalse(flag);
+        }
+
+    }
+
+    public class SqlDataServiceTestClient: ISqlDataService
+    {
+        private List<ClientData> mockTable = new List<ClientData>();
+        string date = DateTime.Now.ToString();
+        
+        public List<ClientData> Data()
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTestRow1 = new ClientData(1, "src", "msg", "det", dt);
+            ClientData clientDataTestRow2 = new ClientData(2, "src2", "msg2", "det2", dt);
+            mockTable.Add(clientDataTestRow1);
+            mockTable.Add(clientDataTestRow2);
+            return mockTable;
+        }
+        public IEnumerable<ClientData> View()
+        {
+            List<ClientData> dataRows = Data();
+            return dataRows;
+        }
+        public IEnumerable<ClientData> DataSpecificId(ClientData clientData)
+        {
+            DateTime dt = Convert.ToDateTime(date);
+            ClientData clientDataTestRow1 = new ClientData(1, "src", "msg", "det", dt);
+            ClientData clientDataTestRow2 = new ClientData(2, "src2", "msg2", "det2", dt);
+            mockTable.Add(clientDataTestRow1);
+            mockTable.Add(clientDataTestRow2);
+            var dataRows = new List<ClientData>();
+            for (int i = 0; i < mockTable.Count; i++)
+            {
+                if (mockTable[i].Id == clientData.Id)
+                {
+                    dataRows.Add(mockTable[i]);
+                    return dataRows;
+                }
+            }
+            return null;
+        }
+        public DataActionResult Insert(ClientData clientData)
+        {
+            mockTable.Add(clientData);
+            return new DataActionResult(){IsSuccess = true, BusinessMessage = null, Exception=null};
+        }
+        public DataActionResult Update(ClientData clientData)
+        {
+            var row = mockTable.Where(r => r.Id == clientData.Id).FirstOrDefault();
+            mockTable.RemoveAll(p => p.Id == clientData.Id);
+            mockTable.Add(clientData);
+            return new DataActionResult() { IsSuccess = true, BusinessMessage = null, Exception = null };
+        }
+        public DataActionResult Delete(DeleteClientData deleteClientData)
+        {
+            var row = mockTable.Where(r => r.Id == deleteClientData.Id).FirstOrDefault();
+            return new DataActionResult() { IsSuccess = true, BusinessMessage = null, Exception = null };
+        }
+    }
+}

@@ -1,0 +1,178 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Http;
+using LoggingService.Models;
+using LoggingService.Services;
+
+namespace LoggingWebHost
+{
+    public class LogController : ApiController
+    {
+        private BusinessLogic busLogic;
+        private IBusinessService businessService;
+
+        private ClientData clientData;
+
+        public LogController()
+        {
+            busLogic = new BusinessLogic();
+            businessService = null;
+        }
+        public LogController(IBusinessService businessService)
+        {
+            this.businessService = businessService;
+            busLogic = null;
+        }
+        
+        [HttpGet]
+        public IHttpActionResult Get()
+        {
+            IHttpActionResult result = null;
+            if (busLogic == null)
+            {
+                var getBusInterface = businessService.View();
+                result = Ok(getBusInterface);
+            }
+            else if (businessService == null)
+            {
+                IEnumerable<ClientData> viewCont = busLogic.View();
+                var output = viewCont.Select(r => new ClientDataDto() { Id = r.Id, SourceData = r.SourceData, MessageOutput = r.MessageOutput, Details = r.Details, CreatedDateEst = r.CreatedDateEst });
+                result = Ok(output);
+            }
+
+            return result;
+        }
+        [HttpGet]
+        public IHttpActionResult GetId(int id)
+        {
+            IHttpActionResult result = null;
+            clientData = new ClientData(id);
+            if (busLogic == null)
+            {
+                IEnumerable<ClientData> viewContId = businessService.View(clientData);
+                if (viewContId.Count() == 0)
+                {
+                    result = BadRequest("Error: this is not a valid ID");
+                }
+                else
+                {
+                    result = Ok(viewContId);
+                }
+            }
+            else if (businessService == null)
+            {
+                IEnumerable<ClientData> viewContId = busLogic.View(clientData);
+                if (viewContId.Count() == 0)
+                {
+                    result = BadRequest("Error: this is not a valid ID");
+                }
+                else
+                {
+                    result = Ok(viewContId);
+                }
+            }
+            return result;
+        }
+        [HttpPost]
+        public IHttpActionResult Post([FromBody] ClientDataDto client)
+        {
+            clientData = new ClientData(client.SourceData, client.MessageOutput, client.Details);
+            IHttpActionResult result = null;
+            if (busLogic == null)
+            {
+                var insertCont = businessService.Insert(clientData);
+
+                if (insertCont.BusinessMessage != null)
+                {
+                    result = BadRequest(insertCont.BusinessMessage.ToString());
+                }
+                else
+                {
+                    result = Ok(client);
+                }
+            }
+            else if (businessService == null)
+            {
+                var insertCont = busLogic.Insert(clientData);
+
+                if (insertCont.BusinessMessage != null)
+                {
+                    result = BadRequest(insertCont.BusinessMessage.ToString());
+                }
+                else
+                {
+                    client.Id = Convert.ToInt32(insertCont.Data["id"]);
+                    result = Ok(client);
+                }
+            }
+            return result;
+        }
+        [HttpPut]
+        public IHttpActionResult Put([FromBody] ClientDataDto client)
+        {
+            clientData = new ClientData(client.Id, client.SourceData, client.MessageOutput, client.Details);
+            IHttpActionResult result = null;
+            if (busLogic == null)
+            {
+                var updateCont = businessService.Update(clientData);
+                if (updateCont.BusinessMessage != null)
+                {
+                    result = BadRequest(updateCont.BusinessMessage.ToString());
+                }
+                else
+                {
+                    result = Ok(client);
+                }
+            }
+            else if (businessService == null)
+            {
+                var updateCont = busLogic.Update(clientData);
+                if (updateCont.BusinessMessage != null)
+                {
+                    result = BadRequest(updateCont.BusinessMessage.ToString());
+                }
+                else
+                {
+                    result = Ok(client);
+                }
+            }
+            return result;
+        }
+        [HttpDelete]
+        public IHttpActionResult Delete(int id)
+        {
+            DeleteClientData deleteClient = new DeleteClientData(id);
+            IHttpActionResult result = null;
+            if (busLogic == null)
+            {
+                var deleteCont = businessService.Delete(deleteClient);
+                if (deleteCont.BusinessMessage != null)
+                {
+                    result = BadRequest("Error: Out of Bounds");
+                }
+                result = Ok(deleteCont);
+            }
+            else if (businessService == null)
+            {
+                var deleteCont = busLogic.Delete(deleteClient);
+                if (deleteCont.BusinessMessage != null)
+                {
+                    result = BadRequest("Error: Out of Bounds");
+                }
+                result = Ok(deleteCont);
+            }
+            return result;
+        }
+    }
+    public class ClientDataDto
+    {
+        public int Id { get; set; }
+        public string SourceData { get; set; }
+        public string MessageOutput { get; set; }
+        public string Details { get; set; }
+        public DateTime CreatedDateEst { get; set; }
+    }
+}

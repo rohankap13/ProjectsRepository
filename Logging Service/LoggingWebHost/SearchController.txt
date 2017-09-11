@@ -1,0 +1,68 @@
+using LoggingService.Models;
+using LoggingService.Services;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.Http;
+
+namespace LoggingWebHost
+{
+    [RoutePrefix("api/search")]
+    public class SearchController : ApiController
+    {
+        public BusinessLogic busLogic = new BusinessLogic();
+        public SqlDataService ds = new SqlDataService();
+        
+        [Route("api/search/SearchId")]
+        [HttpGet]
+        public IHttpActionResult SearchId(int id)
+        {
+            IEnumerable<ClientData> viewId = busLogic.SearchId(id);
+            return Ok(viewId);
+        }
+        [Route("api/search/SearchDate")]
+        [HttpGet]
+        public IHttpActionResult SearchDate(string date)
+        {
+            return null;
+        }
+        [Route("api/search/SearchSource")]
+        [HttpGet]
+        public IHttpActionResult SearchSource(string date)
+        {
+            return null;
+        }
+        [Route("api/search/SearchMessage")]
+        [HttpGet]
+        public IHttpActionResult SearchMessage(string date)
+        {
+            return null;
+        }
+        [Route("api/search/SearchDetails")]
+        [HttpGet]
+        public IHttpActionResult SearchDetails(string date)
+        {
+            return null;
+        }
+        [Route("api/search/SearchGen")]
+        [HttpPost]
+        public IHttpActionResult SearchGen([FromBody] ClientDto client)
+        {
+            ClientData clientData = new ClientData(client.SourceData);
+            IEnumerable<ClientData> searchResults = ds.DataSpecificSource(clientData);
+            
+            //searchResults = busLogic.Item();
+            return Ok("good");
+        }
+    }
+    public class ClientDto
+    {
+        public int Id { get; set; }
+        public string SourceData { get; set; }
+        public string MessageOutput { get; set; }
+        public string Details { get; set; }
+        public DateTime CreatedDateEst { get; set; }
+    }
+}

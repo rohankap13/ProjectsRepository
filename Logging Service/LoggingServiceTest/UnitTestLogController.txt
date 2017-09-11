@@ -1,0 +1,132 @@
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using LoggingService.Models;
+using LoggingWebHost;
+using System.Net.Http;
+using System.Web.Http.Results;
+using LoggingService.Services;
+using System.Linq;
+
+namespace LoggingServiceTest
+{
+    [TestClass]
+    public class UnitTestLogController
+    {
+        //Get
+        [TestMethod]
+        public void WithValidData_Get_ReturnsSuccess()
+        {
+            LogController log = new LogController(new BusinessServiceTest());
+            var result = log.Get();
+            Assert.IsTrue(result.GetType().Name.ToString() == "OkNegotiatedContentResult`1");
+        }
+        //GetId
+        [TestMethod]
+        public void WithValidData_GetId_Id_ReturnsSuccess()
+        {
+            ClientData clientDataTest = new ClientData(2);
+            LogController log = new LogController(new BusinessServiceTest());
+            var result = log.GetId(clientDataTest.Id);
+            Assert.IsTrue(result.GetType().Name.ToString() == "OkNegotiatedContentResult`1");
+        }
+        //Post
+        [TestMethod]
+        public void WithValidData_Post_ClientData_ReturnsSuccess()
+        {
+            string date = DateTime.Now.ToString();
+            DateTime dt = Convert.ToDateTime(date);
+            ClientDataDto clientDataTest = new ClientDataDto();
+            clientDataTest.Id = 4;
+            clientDataTest.SourceData = "srcTest";
+            clientDataTest.MessageOutput = "msgTest";
+            clientDataTest.Details = "detTest";
+            clientDataTest.CreatedDateEst = dt;
+            LogController log = new LogController(new BusinessServiceTest());
+
+            var result = log.Post(clientDataTest);
+            Assert.IsTrue(result.GetType().Name.ToString() == "OkNegotiatedContentResult`1");
+        }
+        //Put
+        [TestMethod]
+        public void WithValidData_Put_ClientData_ReturnsSuccess()
+        {
+            string date = DateTime.Now.ToString();
+            DateTime dt = Convert.ToDateTime(date);
+            ClientDataDto clientDataTest = new ClientDataDto();
+            clientDataTest.Id = 4;
+            clientDataTest.SourceData = "srcTest";
+            clientDataTest.MessageOutput = "msgTest";
+            clientDataTest.Details = "detTest";
+            clientDataTest.CreatedDateEst = dt;
+            LogController log = new LogController(new BusinessServiceTest());
+
+            var result = log.Put(clientDataTest);
+            Assert.IsTrue(result.GetType().Name.ToString() == "OkNegotiatedContentResult`1");
+        }
+        //Delete
+        [TestMethod]
+        public void WithValidData_Delete_Id_ReturnsSuccess()
+        {
+            DeleteClientData deleteClientDataTest = new DeleteClientData(3);
+            LogController log = new LogController(new BusinessServiceTest());
+            var result = log.Delete(deleteClientDataTest.Id);
+            Assert.IsTrue(result.GetType().Name.ToString() == "OkNegotiatedContentResult`1");
+        }
+    }
+
+    public class BusinessServiceTest: IBusinessService
+    {
+        private static List<ClientData> mockTable = new List<ClientData>();
+        public IEnumerable<ClientData> View()
+        {
+            string date = DateTime.Now.ToString();
+            DateTime dt = Convert.ToDateTime(date);
+            var expectedData = new List<ClientData>();
+            ClientData expectedClientDataRow1 = new ClientData(1, "src", "msg", "det", dt);
+            ClientData expectedClientDataRow2 = new ClientData(2, "src2", "msg2", "det2", dt);
+            expectedData.Add(new ClientData(expectedClientDataRow1.Id, expectedClientDataRow1.SourceData, expectedClientDataRow1.MessageOutput, expectedClientDataRow1.Details, expectedClientDataRow1.CreatedDateEst));
+            expectedData.Add(new ClientData(expectedClientDataRow2.Id, expectedClientDataRow2.SourceData, expectedClientDataRow2.MessageOutput, expectedClientDataRow2.Details, expectedClientDataRow2.CreatedDateEst));
+            IEnumerable<ClientData> expectedDataRows = expectedData;
+            return expectedDataRows;
+        }
+        public IEnumerable<ClientData> View(ClientData clientData)
+        {
+            string date = DateTime.Now.ToString();
+            DateTime dt = Convert.ToDateTime(date);
+            var expectedData = new List<ClientData>();
+            ClientData expectedClientDataRow1 = new ClientData(1, "src", "msg", "det", dt);
+            ClientData expectedClientDataRow2 = new ClientData(2, "src2", "msg2", "det2", dt);
+            expectedData.Add(new ClientData(expectedClientDataRow1.Id, expectedClientDataRow1.SourceData, expectedClientDataRow1.MessageOutput, expectedClientDataRow1.Details, expectedClientDataRow1.CreatedDateEst));
+            expectedData.Add(new ClientData(expectedClientDataRow2.Id, expectedClientDataRow2.SourceData, expectedClientDataRow2.MessageOutput, expectedClientDataRow2.Details, expectedClientDataRow2.CreatedDateEst));
+            var dataRows = new List<ClientData>();
+            for (int i = 0; i < expectedData.Count; i++)
+            {
+                if (expectedData[i].Id == clientData.Id)
+                {
+                    dataRows.Add(expectedData[i]);
+                    IEnumerable<ClientData> rows = dataRows;
+                    return dataRows;
+                }
+            }
+            return null;
+        }
+        public DataActionResult Insert(ClientData clientData)
+        {
+            mockTable.Add(clientData);
+            return new DataActionResult() { IsSuccess = true, BusinessMessage = null, Exception = null };
+        }
+        public DataActionResult Update(ClientData clientData)
+        {
+            var row = mockTable.Where(r => r.Id == clientData.Id).FirstOrDefault();
+            mockTable.RemoveAll(p => p.Id == clientData.Id);
+            mockTable.Add(clientData);
+            return new DataActionResult() { IsSuccess = true, BusinessMessage = null, Exception = null };
+        }
+        public DataActionResult Delete(DeleteClientData deleteClientData)
+        {
+            var row = mockTable.Where(r => r.Id == deleteClientData.Id).FirstOrDefault();
+            return new DataActionResult() { IsSuccess = true, BusinessMessage = null, Exception = null };
+        }
+    }
+}

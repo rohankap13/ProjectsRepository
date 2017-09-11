@@ -1,0 +1,106 @@
+using ClientInterface.Models;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ClientInterface.Services
+{
+    public class HttpService
+    {
+	    public HttpService(string baseWebApiAddress)
+	    {
+		    this.baseWebApiAddress = baseWebApiAddress;
+	    }
+
+	    private readonly string baseWebApiAddress;
+		
+        private static HttpClient webClient = new HttpClient();
+        /*
+        public IEnumerable<ClientData> GetSearchDate(string date)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/search/date=" + date);
+            var response = webClient.GetAsync(api).Result;
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;
+        }
+        public IEnumerable<ClientData> GetSearchSource(string src)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/search/source=" + src);
+            var response = webClient.GetAsync(api).Result;
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;
+        }
+        public IEnumerable<ClientData> GetSearchMessage(string msg)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/search/message=" + msg);
+            var response = webClient.GetAsync(api).Result;
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;
+        }
+        public IEnumerable<ClientData> GetSearchDetail(string det)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/search/detail=" + det);
+            var response = webClient.GetAsync(api).Result;
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;
+        }*/
+        public IEnumerable<ClientData> GetSearch(ClientData client)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/search/SearchId/?"+client.ToUrlString());
+            var response = webClient.GetAsync(api).Result;
+            
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;
+        }
+        //Trying to use a post method for get by search because sending an object in a get request is not working
+        public IEnumerable<ClientData> GetSearchSrc(ClientData client)
+        {
+            //Uri api = new Uri(baseWebApiAddress+"/api/search/SearchGen/?" + client.ToUrlString());
+            Uri api1 = new Uri(baseWebApiAddress+"/api/search/SearchGen/");
+            string getBody = JsonConvert.SerializeObject(client);
+            var requestContent = new StringContent(getBody, Encoding.UTF8, "application/json");
+            webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var response = webClient.PostAsync(api1,requestContent).Result;
+
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;
+        }
+
+        public IEnumerable<ClientData> Get()
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/log");
+            var response = webClient.GetAsync(api).Result;
+            var clientData = JsonConvert.DeserializeObject<IEnumerable<ClientData>>(response.Content.ReadAsStringAsync().Result);
+            return clientData;   
+        }
+        public HttpResponseMessage Post(ClientData clientData)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/log");
+            string postBody = JsonConvert.SerializeObject(clientData);
+            var requestContent = new StringContent(postBody, Encoding.UTF8, "application/json"); 
+            webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var response = webClient.PostAsync(api, requestContent).Result;
+            return response;
+        }
+        public HttpResponseMessage Put(ClientData clientData)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/log");
+            string putBody = JsonConvert.SerializeObject(clientData);
+            var requestContent = new StringContent(putBody, Encoding.UTF8, "application/json");
+            webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var response = webClient.PutAsync(api, requestContent).Result;
+            return response;
+        }
+        public HttpResponseMessage Delete(int id)
+        {
+            Uri api = new Uri(baseWebApiAddress+"/api/log/" + id.ToString());
+            var response = webClient.DeleteAsync(api).Result;
+            return response;
+        }
+    }
+}

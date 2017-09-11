@@ -1,0 +1,242 @@
+using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using LoggingService.Models;
+using LoggingService.Services;
+using System.Data;
+namespace LoggingService.Services
+{
+    public interface ISqlDataService
+    {
+        List<ClientData> Data();
+        IEnumerable<ClientData> View();
+        IEnumerable<ClientData> DataSpecificId(ClientData clientData);
+        DataActionResult Insert(ClientData clientData);
+        DataActionResult Update(ClientData clientData);
+        DataActionResult Delete(DeleteClientData deleteClientData);
+    }
+
+    public class SqlDataService: ISqlDataService
+    {
+        private readonly static string connectionString = System.Configuration.ConfigurationSettings.AppSettings["dbConn"].ToString();
+        private static SqlConnection sqlconnection = new SqlConnection(connectionString);
+        private string selectString = "SELECT id, sourceData, messageOutput, details, createdDateEst FROM TraceLogger";
+        
+        private string selectSpecificId = "SELECT * FROM TraceLogger WHERE id = @id";
+        private string selectSpecificDate = "SELECT * FROM TraceLogger WHERE cast(createdDateEst AS date) = @date";
+        private string selectSpecificSource = "select * from TraceLogger WHERE sourceData LIKE '%@src%'";
+        private string selectSpecificMessage = "select * from TraceLogger WHERE messageOutput LIKE '%@msg%'";
+        private string selectSpecificDetail = "select * from TraceLogger WHERE details LIKE '%@det%'";
+
+        private string insertString = "INSERT INTO TraceLogger (sourceData,messageOutput,details) VALUES (@source, @message, @details); Select @@identity;";
+        private string updateString = "UPDATE TraceLogger set sourceData = @source, messageOutput = @message, details = @details, createdDateEst = GETUTCDATE() WHERE id = @id";
+        private string deleteString = "DELETE FROM TraceLogger WHERE id = @id";
+
+        public List<ClientData> Data()
+        {
+            SqlCommand cmd = new SqlCommand(selectString, sqlconnection);
+            var data = new List<ClientData>();
+            sqlconnection.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data.Add(new ClientData(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetDateTime(4)));
+            }
+            reader.Close();
+            sqlconnection.Close();
+            return data;
+        }
+
+        public IEnumerable<ClientData> View()
+        {
+            List<ClientData> dataRows = Data();
+            return dataRows;
+        }
+
+        public IEnumerable<ClientData> DataSpecificId(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(selectSpecificId, sqlconnection);
+            cmd.Parameters.Add("@id", SqlDbType.Int).Value = clientData.Id;
+            var data = new List<ClientData>();
+            sqlconnection.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data.Add(new ClientData(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetDateTime(4)));
+            }
+            reader.Close();
+            sqlconnection.Close();
+            return data;
+        }
+        
+        public IEnumerable<ClientData> DataSpecificDate(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(selectSpecificDate, sqlconnection);
+            cmd.Parameters.Add("@date",SqlDbType.DateTime).Value = clientData.CreatedDateEst;
+            var data = new List<ClientData>();
+            sqlconnection.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data.Add(new ClientData(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetDateTime(4)));
+            }
+            reader.Close();
+            sqlconnection.Close();
+            return data;
+        }
+
+        public IEnumerable<ClientData> DataSpecificSource(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(selectSpecificSource, sqlconnection);
+            cmd.Parameters.Add("@src", SqlDbType.VarChar,500).Value = clientData.SourceData;
+            //mock data for testing
+            var data = new List<ClientData>();
+            data.ElementAt(0).Id = 0;
+            data.ElementAt(0).SourceData = "s";
+            data.ElementAt(0).MessageOutput = "m";
+            data.ElementAt(0).Details = "d";
+            data.ElementAt(0).CreatedDateEst = DateTime.Now;
+            //sqlconnection.Open();
+            //SqlDataReader reader = cmd.ExecuteReader();
+            //while (reader.Read())
+            //{
+                //data.Add(new ClientData(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetDateTime(4)));
+            //}
+            //reader.Close();
+            //sqlconnection.Close();
+            return data;
+        }
+        public IEnumerable<ClientData> DataSpecificMessage(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(selectSpecificMessage, sqlconnection);
+            cmd.Parameters.Add("@msg", SqlDbType.NVarChar, 1000).Value = clientData.MessageOutput;
+            var data = new List<ClientData>();
+            sqlconnection.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data.Add(new ClientData(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetDateTime(4)));
+            }
+            reader.Close();
+            sqlconnection.Close();
+            return data;
+        }
+        public IEnumerable<ClientData> DataSpecificDetail(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(selectSpecificDetail, sqlconnection);
+            cmd.Parameters.Add("@det", SqlDbType.NVarChar, 5000).Value = clientData.MessageOutput;
+            var data = new List<ClientData>();
+            sqlconnection.Open();
+            SqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                data.Add(new ClientData(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetString(3), reader.GetDateTime(4)));
+            }
+            reader.Close();
+            sqlconnection.Close();
+            return data;
+        }
+        public DataActionResult Insert(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(insertString, sqlconnection);
+            cmd.Parameters.Add("@source", SqlDbType.VarChar, 500).Value = clientData.SourceData;
+            cmd.Parameters.Add("@message", SqlDbType.NVarChar, 1000).Value = clientData.MessageOutput;
+            cmd.Parameters.Add("@details", SqlDbType.NVarChar, 5000).Value = clientData.Details;
+            var insertData = new DataActionResult();
+            insertData.IsSuccess = false;
+            try
+            {
+                sqlconnection.Open();
+                int newId = Convert.ToInt32(cmd.ExecuteScalar());
+                insertData.Data = new Dictionary<string, object>();
+                insertData.Data.Add("id", newId);
+
+                insertData.IsSuccess = true;
+            }
+            catch (Exception ex)
+            {
+                insertData.Exception = ex;
+                insertData.IsSuccess = false;
+                insertData.BusinessMessage = "Error: " + ex.Message;
+            }
+            finally
+            {
+                sqlconnection.Close();
+            }
+            return insertData;
+        }
+
+        public DataActionResult Update(ClientData clientData)
+        {
+            SqlCommand cmd = new SqlCommand(updateString, sqlconnection);
+            cmd.Parameters.Add("@id", SqlDbType.Int).Value = clientData.Id;
+            cmd.Parameters.Add("@source", SqlDbType.VarChar, 500).Value = clientData.SourceData;
+            cmd.Parameters.Add("@message", SqlDbType.NVarChar, 1000).Value = clientData.MessageOutput;
+            cmd.Parameters.Add("@details", SqlDbType.NVarChar, 5000).Value = clientData.Details;
+            //cmd.Parameters.Add("@date", SqlDbType.DateTime).Value = clientData.CreatedDateEst;
+            var updateData = new DataActionResult();
+            updateData.IsSuccess = false;
+            try
+            {
+                sqlconnection.Open();
+                int rows = cmd.ExecuteNonQuery();
+                if (rows == 0)
+                {
+                    updateData.IsSuccess = false;
+                    updateData.BusinessMessage = "\nWarning: The update method affected 0 rows.";
+                    return updateData;
+                }
+                updateData.IsSuccess = true;
+            }
+            catch (Exception ex)
+            {
+                updateData.Exception = ex;
+                updateData.IsSuccess = false;
+                updateData.BusinessMessage = "Error: " + ex.Message;
+            }
+            finally
+            {
+                sqlconnection.Close();
+            }
+            return updateData;
+        }
+        
+        public DataActionResult Delete(DeleteClientData deleteClientData)
+        {
+            SqlCommand cmd = new SqlCommand(deleteString, sqlconnection);
+            cmd.Parameters.Add("@id", SqlDbType.Int).Value = deleteClientData.Id;
+            var deleteData = new DataActionResult();
+            deleteData.IsSuccess = false;
+            try
+            {
+                sqlconnection.Open();
+                int rows = cmd.ExecuteNonQuery();
+                if (rows == 0)
+                {
+                    deleteData.IsSuccess = false;
+                    deleteData.BusinessMessage = "Warning: The delete command affected 0 rows.";
+                    return deleteData;
+                }
+                deleteData.IsSuccess = true;
+            }
+            catch (Exception ex)
+            {
+                deleteData.Exception = ex;
+                deleteData.IsSuccess = false;
+                deleteData.BusinessMessage = "Error: " + ex.Message;
+            }
+            finally
+            {
+                sqlconnection.Close();
+            }
+            return deleteData;
+        }
+    
+        //public IEnumerable<ClientData> 
+    
+    
+    }
+}

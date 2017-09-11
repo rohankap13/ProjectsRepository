@@ -1,0 +1,259 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using ClientInterface.Models;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
+using System.Linq;
+using ClientInterface.Services;
+using System.Configuration;
+
+namespace ClientInterface
+{
+    class ClientInterface
+    {
+        private static HttpClient webClient = new HttpClient();
+        private static ClientData clientData;
+		private static string webApiHost = ConfigurationManager.AppSettings["WebApiHost"].ToString();
+		private static string webApiPort = ConfigurationManager.AppSettings["WebApiPort"].ToString();
+
+		static void Main(string[] args)
+		{
+
+			var baseWebApiAddress = "http://" + webApiHost + ":" + webApiPort;
+
+            int choice = 0;
+            do
+            {
+                Console.WriteLine("\nSelect the command you wish to use");
+                Console.WriteLine("1. View the rows");
+                Console.WriteLine("2. Add a row");
+                Console.WriteLine("3. Update a row");
+                Console.WriteLine("4. Delete a row");
+                Console.WriteLine("5. Search");
+                Console.WriteLine("6. Quit");
+                Console.Write("Choice: ");
+                choice = Convert.ToInt32(Console.ReadLine());
+
+                HttpService httpSer = new HttpService(baseWebApiAddress);
+
+                if (choice == 1)
+                {
+                    var clientData = httpSer.Get();
+                    Console.WriteLine("\nID".PadRight(6) + "Source Data".PadRight(14) + "Message Output".PadRight(17) + "Details".PadRight(10) + "Date");
+                    foreach (var user in clientData)
+                    {
+                        Console.WriteLine(string.Join(" ", user.Id.ToString().PadRight(4), user.SourceData.PadRight(13), user.MessageOutput.PadRight(16), user.Details.PadRight(9), user.CreatedDateEst.ToString()));
+                    }
+                    Console.WriteLine();
+                }
+                else if (choice == 2)
+                {
+                    Console.Write("Source Data: ");
+                    string source = Console.ReadLine();
+                    Console.Write("Message Output: ");
+                    string msg = Console.ReadLine();
+                    Console.Write("Details: ");
+                    string detail = Console.ReadLine();
+                    try
+                    {
+                        clientData = new ClientData(source, msg, detail);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        Console.WriteLine("Not all parameters are valid");
+                        continue;
+                    }
+                    catch(Exception)
+                    {
+                        Console.WriteLine("System exception occured. Try again.");
+                        continue;
+                    }
+
+                    var response = httpSer.Post(clientData);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine("Error: " + response.Content.ReadAsStringAsync().Result);
+                    }
+                    Console.WriteLine();
+                }
+                else if (choice == 3)
+                {
+                    Console.Write("\nSelect the ID of the number you wish to update: ");
+                    int id = Convert.ToInt32(Console.ReadLine());
+                    Console.Write("Updated Source Data: ");
+                    string src = Console.ReadLine();
+                    Console.Write("Updated Message Output: ");
+                    string msg = Console.ReadLine();
+                    Console.Write("Updated Details: ");
+                    string detail = Console.ReadLine();
+
+                    clientData = new ClientData(id, src, msg, detail);
+
+                    var response = httpSer.Put(clientData);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine("Error: " + response.Content.ReadAsStringAsync().Result);
+                    }
+                }
+                else if (choice == 4)
+                {
+                    Console.Write("\nType the ID of the entry you wish to delete: ");
+                    int id = Convert.ToInt32(Console.ReadLine());
+
+                    var response = httpSer.Delete(id);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine("Error: " + response.Content.ReadAsStringAsync().Result);
+                    }
+                    Console.WriteLine();
+                }
+                else if (choice == 5)
+                {
+                    int searchChoice = 0;
+                    do
+                    {
+                    Console.WriteLine("\n1. Search by ID");
+                    //Console.WriteLine("2. Search by date");
+                    Console.WriteLine("3. Search by source");
+                    //Console.WriteLine("4. Search by message");
+                    //Console.WriteLine("5. Search by detail");
+                   // Console.WriteLine("6. Quit");
+                    searchChoice = Convert.ToInt32(Console.ReadLine());
+                    
+                    SearchService search = new SearchService(baseWebApiAddress);
+                    HttpService http = new HttpService(baseWebApiAddress);
+                    
+                    if (searchChoice == 1)
+                    {
+                        Console.Write("\nType the ID of the entry you wish to search: ");
+                        int id = Convert.ToInt32(Console.ReadLine());
+
+                        ClientData client = new ClientData(id);
+                        List<ClientData> searchId = search.Search(client);
+                        
+                        if (searchId.Count() == 0)
+                        {
+                            Console.WriteLine("\nNo search results");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nID".PadRight(6) + "Source Data".PadRight(14) + "Message Output".PadRight(17) + "Details".PadRight(10) + "Date");
+                            Console.WriteLine(string.Join(" ", searchId.First().Id.ToString().PadRight(4), searchId.First().SourceData.PadRight(13), searchId.First().MessageOutput.PadRight(16), searchId.First().Details.PadRight(9), searchId.First().CreatedDateEst.ToString()));
+                            Console.WriteLine();
+                        }
+                        break;
+                    }
+                    else if (searchChoice == 2)
+                    {
+                        Console.Write("\nEnter the month you want to search: ");
+                        int month = Convert.ToInt16(Console.ReadLine());
+                        Console.Write("Enter the day you want to search: ");
+                        int day = Convert.ToInt16(Console.ReadLine());
+                        Console.Write("Enter the year you want to search: ");
+                        int year = Convert.ToInt16(Console.ReadLine());
+                        
+                        string date = Convert.ToString(year + "-" + month + "-" + day);
+                        
+                        ClientData client = new ClientData(null, null,null,date);
+                        
+                        List<ClientData> searchDate = search.Search(client);
+                        
+                        if (searchDate.Count() == 0)
+                        {
+                            Console.WriteLine("\nNo search results");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nID".PadRight(6) + "Source Data".PadRight(14) + "Message Output".PadRight(17) + "Details".PadRight(10) + "Date");
+                            foreach (var user in searchDate)
+                            {
+                                Console.WriteLine(string.Join(" ", user.Id.ToString().PadRight(4), user.SourceData.PadRight(13), user.MessageOutput.PadRight(16), user.Details.PadRight(9), user.CreatedDateEst.ToString()));
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    else if (searchChoice == 3)
+                    {
+                        Console.Write("Enter the source you want to search for: ");
+                        string src = Console.ReadLine();
+                        //ClientData client = new ClientData(src, null, null, null);
+                        ClientData clientSrc = new ClientData(src);
+                        //List<ClientData> searchSource = search.Search(client);  
+                        List<ClientData> searchSource = search.Search(clientSrc);
+                        if (searchSource.Count() == 0)
+                        {
+                            Console.WriteLine("\nNo search results");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nID".PadRight(6) + "Source Data".PadRight(14) + "Message Output".PadRight(17) + "Details".PadRight(10) + "Date");
+                            foreach (var user in searchSource)
+                            {
+                                Console.WriteLine(string.Join(" ", user.Id.ToString().PadRight(4), user.SourceData.PadRight(13), user.MessageOutput.PadRight(16), user.Details.PadRight(9), user.CreatedDateEst.ToString()));
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    else if (searchChoice == 4)
+                    {
+                        Console.Write("Enter the message you want to search for: ");
+                        string msg = Console.ReadLine();
+
+                        ClientData client = new ClientData(null, msg, null,null);
+                        List<ClientData> searchMessage = search.Search(client);
+                        
+                        if (searchMessage.Count() == 0)
+                        {
+                            Console.WriteLine("\nNo search results");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nID".PadRight(6) + "Source Data".PadRight(14) + "Message Output".PadRight(17) + "Details".PadRight(10) + "Date");
+                            foreach (var user in searchMessage)
+                            {
+                                Console.WriteLine(string.Join(" ", user.Id.ToString().PadRight(4), user.SourceData.PadRight(13), user.MessageOutput.PadRight(16), user.Details.PadRight(9), user.CreatedDateEst.ToString()));
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    else if (searchChoice == 5)
+                    {
+                        Console.Write("Enter the detail you want to search for: ");
+                        string det = Console.ReadLine();
+
+                        ClientData client = new ClientData(null, null, det, null);
+                        List<ClientData> searchSource = search.Search(client);
+                        
+                        if (searchSource.Count() == 0)
+                        {
+                            Console.WriteLine("\nNo search results");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nID".PadRight(6) + "Source Data".PadRight(14) + "Message Output".PadRight(17) + "Details".PadRight(10) + "Date");
+                            foreach (var user in searchSource)
+                            {
+                                Console.WriteLine(string.Join(" ", user.Id.ToString().PadRight(4), user.SourceData.PadRight(13), user.MessageOutput.PadRight(16), user.Details.PadRight(9), user.CreatedDateEst.ToString()));
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    else if (searchChoice > 6 || searchChoice < 1)
+                    {
+                        Console.WriteLine("\nNot a valid choice\n");
+                    }
+                    } while (searchChoice != 6);
+                    
+                    
+                }
+                else if (choice > 6 || choice < 1)
+                {
+                    Console.WriteLine("\nNot a valid choice\n");
+                }
+            } while (choice != 6);
+        }
+    }
+}
